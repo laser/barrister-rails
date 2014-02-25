@@ -1,6 +1,9 @@
 # barrister-rails
 
-A wrapper for the Barrister Ruby client, for Rails. Transmutes inbound structs to ActiveAttribute-enabled models on the fly.
+A wrapper for the Barrister Ruby client, for Rails. Transmutes the hashes
+representing custom IDL structs to instances of runtime-generated psuedo-models
+that implement the ActiveModel interface - allowing them to be consumed easily
+by your Rails views.
 
 ## Installation
 
@@ -16,9 +19,64 @@ Or install it yourself as:
 
     $ gem install barrister-rails
 
+## A note on the hash-to-model transmute
+
+By default, the Barrister Rails client transmutes hashes (representing structs
+in the IDL) to instances of runtime-defined classes that implement the
+ActiveModel interface. This allows data from the server to be consumed easily
+by Rails' view helpers. Note that these classes will only be created if a
+class of the same name cannot be found. If you want to implement your own class
+that the Rails client will instantiate, simply define it in app/models using
+the name of the struct from the IDL.
+
 ## Usage
 
-TODO: Write usage instructions here
+### Setup
+
+By default, the barrister-rails client assumes your server is reachable via http:
+
+```ruby
+
+c = Barrister::Rails::Client.new 'http://localhost:3001/api'
+
+```
+
+If an alternative transport is desired, simply instantiate it and pass it to the
+client's constructor:
+
+```ruby
+
+redis_transport = Barrister::Transports::Redis.new 'some_channel_name'
+c = Barrister::Rails::Client.new redis_transport
+
+```
+
+### Usage
+
+Upon instantiation, the Barrister client will attempt to pull down the JSON
+representation of the IDL file used by the Barrister server. Assuming an
+interface has been defined in the IDL, you can call methods on it like so:
+
+```ruby
+
+users = c.UserService.get_all_users
+puts users
+=> [#<User email: "smasd", full_name: "Joe", id: 9, phone_number: "2069990811">,
+ #<User email: "smurf", full_name: "Bob", id: 10, phone_number: "234234234">]
+
+```
+
+### Disabling hash-to-model transmute
+
+To disable the runtime creation of classes and conversion of Ruby hashes,
+simply pass a false-value on the (optional) configuration hash at the time
+of instantiation:
+
+```ruby
+
+c = Barrister::Rails::Client.new 'http://localhost:3001/api', transmute_to_model: false
+
+```
 
 ## Contributing
 

@@ -1,4 +1,3 @@
-require 'pry'
 require "barrister"
 require 'active_attr'
 require "barrister-rails/version"
@@ -96,7 +95,8 @@ module Barrister
 
       end
 
-      def initialize(transport)
+      def initialize(transport_or_uri)
+        transport = transport_or_uri.is_a?(String) ? Barrister::HttpTransport.new(transport_or_uri) : transport_or_uri
         @client = Barrister::Client.new(transport)
         @custom_types = Hash.new
 

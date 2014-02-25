@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Barrister::Rails::VERSION
   spec.authors       = ["Erin Swenson-Healey"]
   spec.email         = ["erin.swenson.healey@gmail.com"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
+  spec.summary       = %q{A Rails-oriented wrapper for the Barrister client.}
+  spec.description   = %q{More to come!}
   spec.homepage      = ""
   spec.license       = "MIT"
 
@@ -21,4 +21,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "barrister", "~> 0"
   spec.add_dependency "active_attr", "~> 0"
   spec.add_development_dependency "pry", "~> 0"
+  spec.add_development_dependency "rspec", "~> 2.0"
 end
