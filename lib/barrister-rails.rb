@@ -30,16 +30,17 @@ module Barrister
 
         attr_reader :name
 
-        def initialize(name, client, fx_metadata)
-          @name        = name
-          @client      = client
-          @fx_metadata = fx_metadata
+        def initialize(name, client, fx_metadata, transmute_to_model)
+          @name               = name
+          @client             = client
+          @fx_metadata        = fx_metadata
+          @transmute_to_model = transmute_to_model
         end
 
         def method_missing(name, *args)
           result = @client.send(@name).send(name, *args)
 
-          unless DEFAULT_BARRISTER_TYPES.include? @fx_metadata[name][:type]
+          if @transmute_to_model == true and DEFAULT_BARRISTER_TYPES.include?(@fx_metadata[name][:type]) == false
             cast result, @fx_metadata[name][:type], @fx_metadata[name][:is_array]
           else
             result
@@ -95,7 +96,7 @@ module Barrister
 
       end
 
-      def initialize(transport_or_uri)
+      def initialize(transport_or_uri, opts={})
         transport = transport_or_uri.is_a?(String) ? Barrister::HttpTransport.new(transport_or_uri) : transport_or_uri
         @client = Barrister::Client.new(transport)
         @custom_types = Hash.new
@@ -104,14 +105,18 @@ module Barrister
           .instance_variable_get('@contract')
           .interfaces
 
-        pairs = interfaces
-          .map { |iface| iface.functions }
-          .flatten
-          .map { |fx| [fx.name.to_sym, { type: fx.returns['type'], is_array: fx.returns['is_array'] } ] }
+        unless opts[:transmute_to_model] == false
+          pairs = interfaces
+            .map { |iface| iface.functions }
+            .flatten
+            .map { |fx| [fx.name.to_sym, { type: fx.returns['type'], is_array: fx.returns['is_array'] } ] }
 
-        fx_metadata = Hash[pairs]
+          fx_metadata = Hash[pairs]
+        else
+          fx_metadata = {}
+        end
 
-        @interface_proxies = interfaces.map { |iface| InterfaceProxy.new iface.name, @client, fx_metadata }
+        @interface_proxies = interfaces.map { |iface| InterfaceProxy.new iface.name, @client, fx_metadata, opts[:transmute_to_model] != false }
       end
 
       def method_missing(name, *args)
