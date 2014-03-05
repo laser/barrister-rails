@@ -19,6 +19,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "barrister", "~> 0"
+  spec.add_dependency "barrister-intraprocess", "~> 0"
   spec.add_dependency "active_attr", "~> 0"
   spec.add_development_dependency "pry", "~> 0"
   spec.add_development_dependency "rspec", "~> 2.0"

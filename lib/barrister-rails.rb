@@ -1,6 +1,7 @@
 require "barrister"
-require 'active_attr'
+require "barrister-intraprocess"
 require "barrister-rails/version"
+require 'active_attr'
 
 module Barrister
 
@@ -30,17 +31,16 @@ module Barrister
 
         attr_reader :name
 
-        def initialize(name, client, fx_metadata, transmute_to_model)
+        def initialize(name, client, fx_metadata)
           @name               = name
           @client             = client
           @fx_metadata        = fx_metadata
-          @transmute_to_model = transmute_to_model
         end
 
         def method_missing(name, *args)
           result = @client.send(@name).send(name, *args)
 
-          if @transmute_to_model == true and DEFAULT_BARRISTER_TYPES.include?(@fx_metadata[name][:type]) == false
+          if DEFAULT_BARRISTER_TYPES.include?(@fx_metadata[name][:type]) == false
             cast result, @fx_metadata[name][:type], @fx_metadata[name][:is_array]
           else
             result
@@ -96,8 +96,17 @@ module Barrister
 
       end
 
-      def initialize(transport_or_uri, opts={})
-        transport = transport_or_uri.is_a?(String) ? Barrister::HttpTransport.new(transport_or_uri) : transport_or_uri
+      def initialize(transport_or_uri_or_handler, json_path=nil)
+        if transport_or_uri_or_handler.is_a?(String)
+          transport = Barrister::HttpTransport.new(transport_or_uri_or_handler)
+        elsif transport_or_uri_or_handler.class.to_s.split('::').first == 'Barrister'
+          transport = transport_or_uri_or_handler
+        else
+          raise 'json_path must be provided if registering a handler directly' unless json_path
+          container = Barrister::IntraProcessContainer.new json_path, transport_or_uri_or_handler
+          transport = Barrister::IntraProcessTransport.new container
+        end
+
         @client = Barrister::Client.new(transport)
         @custom_types = Hash.new
 
@@ -105,18 +114,14 @@ module Barrister
           .instance_variable_get('@contract')
           .interfaces
 
-        unless opts[:transmute_to_model] == false
-          pairs = interfaces
-            .map { |iface| iface.functions }
-            .flatten
-            .map { |fx| [fx.name.to_sym, { type: fx.returns['type'], is_array: fx.returns['is_array'] } ] }
+        pairs = interfaces
+          .map { |iface| iface.functions }
+          .flatten
+          .map { |fx| [fx.name.to_sym, { type: fx.returns['type'], is_array: fx.returns['is_array'] } ] }
 
-          fx_metadata = Hash[pairs]
-        else
-          fx_metadata = {}
-        end
+        fx_metadata = Hash[pairs]
 
-        @interface_proxies = interfaces.map { |iface| InterfaceProxy.new iface.name, @client, fx_metadata, opts[:transmute_to_model] != false }
+        @interface_proxies = interfaces.map { |iface| InterfaceProxy.new iface.name, @client, fx_metadata }
       end
 
       def method_missing(name, *args)
