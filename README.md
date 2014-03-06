@@ -51,6 +51,29 @@ c = Barrister::Rails::Client.new redis_transport
 
 ```
 
+### Initializing a Client
+
+I recommend initializing a client for each interface that you wish to interact with:
+
+```ruby
+
+# config/initializers/user_service_client.rb
+
+class UserServiceClient
+
+  def self.instance
+    @@instance ||= create
+    @@instance.UserService
+  end
+ 
+  def self.create
+    Barrister::Rails::Client.new 'http://localhost:3001/api'
+  end
+  
+end
+
+```
+
 ### Usage
 
 Upon instantiation, the Barrister client will attempt to pull down the JSON
@@ -59,22 +82,14 @@ interface has been defined in the IDL, you can call methods on it like so:
 
 ```ruby
 
+c = Barrister::Rails::Client.new 'http://localhost:3001/api'
+
 users = c.UserService.get_all_users
+
 puts users
+
 => [#<User email: "smasd", full_name: "Joe", id: 9, phone_number: "2069990811">,
  #<User email: "smurf", full_name: "Bob", id: 10, phone_number: "234234234">]
-
-```
-
-### Disabling hash-to-model transmute
-
-To disable the runtime creation of classes and conversion of Ruby hashes,
-simply pass a false-value on the (optional) configuration hash at the time
-of instantiation:
-
-```ruby
-
-c = Barrister::Rails::Client.new 'http://localhost:3001/api', transmute_to_model: false
 
 ```
 
