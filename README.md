@@ -5,6 +5,10 @@ representing custom IDL structs to instances of runtime-generated psuedo-models
 that implement the ActiveModel interface - allowing them to be consumed easily
 by your Rails views.
 
+## Before Getting Started
+
+First, check out Barrister RPC here: http://barrister.bitmechanic.com
+
 ## Installation
 
 Add this line to your application's Gemfile:
