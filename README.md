@@ -1,7 +1,7 @@
 # barrister-rails
 
 A wrapper for the Barrister Ruby client, for Rails. Transmutes the hashes
-representing custom IDL structs to instances of runtime-generated psuedo-models
+representing custom IDL structs to instances of runtime-generated pseudo-models
 that implement the ActiveModel interface - allowing them to be consumed easily
 by your Rails views.
 
